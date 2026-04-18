@@ -1,0 +1,50 @@
+{
+  "name": "baseons/framework",
+  "type": "project",
+  "description": "The Baseons framework",
+  "keywords": [
+    "framework",
+    "baseons"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Warley Rodrigues de Moura",
+      "email": "baseons@hotmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Database\\": "database/",
+      "Baseons\\": "core"
+    },
+    "files": [
+      "core/Collections/Helpers.php"
+    ]
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "@php base composer"
+    ],
+    "post-root-package-install": [
+      "@php base composer"
+    ],
+    "post-create-project-cmd": [
+      "@php base composer"
+    ]
+  },
+  "require": {
+    "php": "^8.4"
+  },
+  "require-dev": {
+    "swoole/ide-helper": "^5.1"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

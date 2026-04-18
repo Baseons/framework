@@ -1,0 +1,15 @@
+<?php
+
+
+namespace App\Models{{ $namespace ? "\\$namespace" : '' }};
+
+use Baseons\Collections\Model;
+
+class {{$name}} extends Model
+{
+    protected static string|null $connection = {{$connection ? "'" . $connection . "'" : 'null'}};
+
+    public static string $table = '{{strtolower($name)}}';
+    public static string|null $id = {{$primary ? "'" . $primary . "'" : 'null'}};
+    public static array $fillable = [{{ implode(', ', $columns) }}];
+};

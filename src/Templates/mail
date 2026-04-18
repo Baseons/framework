@@ -1,0 +1,20 @@
+<?php
+
+
+namespace App\Mails{{ $namespace ? "\\$namespace" : '' }};
+
+use Baseons\Mail\Builder;
+
+class {{$name}} extends Builder
+{
+    public function make(mixed $data = null)
+    {
+        $this->subject('Example title');
+
+        $this->to('example@hotmail.com', 'Example');
+
+        $this->content('Helo word');
+
+        return $this;
+    }
+}
