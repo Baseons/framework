@@ -196,7 +196,6 @@ class Builder
         if (!empty($this->body)) {
             $content .= $this->line('');
             $content .= $this->line('--' . $boundary);
-
             $content .= $this->body;
         }
 
