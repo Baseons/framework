@@ -27,6 +27,11 @@ class Response
         return $this->body;
     }
 
+    public function ip()
+    {
+        return $this->info['primary_ip'] ?? null;
+    }
+
     public function error()
     {
         return curl_errno($this->curl);
