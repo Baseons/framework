@@ -116,7 +116,7 @@ class IMAP
     {
         $deleted = imap_delete($this->connection, $uid, FT_UID);
 
-        if ($deleted) imap_expunge($this->connection);
+        imap_expunge($this->connection);
 
         return $deleted;
     }
