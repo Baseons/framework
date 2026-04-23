@@ -9,7 +9,7 @@ use Throwable;
 
 class CommandHttp
 {
-    public function run(string|null $port = null)
+    public function server(string|null $port = null)
     {
         cli_set_process_title('Baseons Framework Web Server');
 

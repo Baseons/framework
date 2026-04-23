@@ -15,7 +15,7 @@ class BaseonsCommands
             Console::command('test', 'CommandTest::test')->description('run tests');
 
             Console::title('Http')->prefix('http:')->group(function () {
-                Console::command('server {port?}', 'CommandHttp::run')->description('development server');
+                Console::command('server {port?}', 'CommandHttp::server')->description('development server');
                 Console::command('list', 'CommandHttp::list')->description('list routes');
             });
 
