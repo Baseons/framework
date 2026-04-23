@@ -56,7 +56,7 @@ class WebSocketServer
 
                 'reload_async' => true,
                 // 'max_request' => 10000,
-                'log_file' => path()->storage('logs/swoole_ws.log'),
+                // 'log_file' => path()->storage('logs/swoole_ws.log'),
                 // 'max_wait_time' => 2,
                 'websocket_compression' => true,
                 'open_websocket_close_frame' => true,

@@ -49,7 +49,7 @@ class HttpServer
         $this->server->set([
             'worker_num' => $params['workers'],
             'reload_async' => true,
-            'log_file' => path()->storage('logs/swoole_ws.log')
+            // 'log_file' => path()->storage('logs/swoole_ws.log')
         ]);
 
         $this->server->on('request', function (Request $request, Response $response) use ($class, $params) {
