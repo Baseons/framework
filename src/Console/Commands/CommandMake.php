@@ -179,7 +179,7 @@ class CommandMake
 
     public function job(string $name)
     {
-        $params = $this->params($name, path('app/Jobs'));
+        $params = $this->params($name, path('app/Controllers/Job'));
 
         if (file_exists($params['path'])) {
             Shell::red('replace current file ? (y/n)');
@@ -418,7 +418,7 @@ class CommandMake
 
     public function console(string $name)
     {
-        $params = $this->params($name, path('app/Console'));
+        $params = $this->params($name, path('app/Controllers/Console'));
 
         if (file_exists($params['path'])) {
             Shell::red('replace current file ? (y/n)');
