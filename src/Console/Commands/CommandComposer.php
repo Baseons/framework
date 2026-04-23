@@ -14,10 +14,8 @@ class CommandComposer
             path()->base('app/Models'),
             path()->base('app/Mails'),
             path()->base('app/Middlewares'),
-            path()->base('app/Jobs'),
             path()->base('app/Helpers'),
             path()->base('app/Controllers'),
-            path()->base('app/Console'),
             path()->base('app/Classes'),
 
             path()->storage('logs'),
