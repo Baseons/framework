@@ -112,13 +112,21 @@ class IMAP
         return imap_num_msg($this->connection);
     }
 
+
+    public function view(int|array $uid)
+    {
+        $uidList = is_array($uid) ? implode(',', $uid) : $uid;
+
+        return imap_setflag_full($this->connection, $uidList, "\\Seen", ST_UID) ? true : false;
+    }
+
     public function delete(int $uid)
     {
         $deleted = imap_delete($this->connection, $uid, FT_UID);
 
         imap_expunge($this->connection);
 
-        return $deleted;
+        return $deleted ? true : false;
     }
 
     public function body(int $uid)
