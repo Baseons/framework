@@ -203,7 +203,7 @@ class Upload
     /**
      * @return string|array|false
      */
-    public function saveImage(string $path, string|array|null $name = null, int|array|null $resize = null, bool $resize_adaptive = true, int|null $quality = 80, string $format = 'jpeg')
+    public function saveImage(string $path, string|array|null $name = null, int|array|null $resize = null, bool $resize_adaptive = true, int|null $quality = 90, string $format = 'jpeg')
     {
         if (!extension_loaded('imagick')) throw new Exception('imagick extension not loaded');
 

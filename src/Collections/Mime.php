@@ -1297,7 +1297,7 @@ class Mime
     public static function isImage(string $value)
     {
         $is = function (string $extension) {
-            return in_array($extension, ['gif', 'jpeg', 'jpg', 'png', 'swf', 'psd', 'bmp', 'tiff', 'tif', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp', 'xbm', 'ico', 'jpe', 'jfif']);
+            return in_array($extension, ['gif', 'jpeg', 'jpg', 'png', 'swf', 'psd', 'bmp', 'tiff', 'tif', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp', 'xbm', 'ico', 'jpe', 'jfif', 'webp']);
         };
 
         if ($is(trim($value, '.'))) return true;
