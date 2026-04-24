@@ -217,16 +217,19 @@ class Upload
         storage()->makeDirectory($path);
 
         foreach ($files as $key => $file) {
+            if ($format) $extension = $format;
+            else $extension = array_key_exists($key, $name) ? pathinfo($name[$key], PATHINFO_EXTENSION) : pathinfo($file['name'], PATHINFO_EXTENSION);
+
             $file_name = array_key_exists($key, $name) ? pathinfo($name[$key], PATHINFO_FILENAME) : pathinfo($file['name'], PATHINFO_FILENAME);
-            $file_name .= '.' . (array_key_exists($key, $name) ? pathinfo($name[$key], PATHINFO_EXTENSION) : pathinfo($file['name'], PATHINFO_EXTENSION));
+            $file_name .= '.' . $extension;
             $save_path = $path . DIRECTORY_SEPARATOR . $file_name;
 
             move_uploaded_file($file['tmp_name'], $save_path);
 
             $imagick = new \Imagick;
             $imagick->readImage($save_path);
+            
             if ($format) $imagick->setImageFormat($format);
-
             if ($quality !== null) $imagick->setImageCompressionQuality($quality);
 
             $imagick->stripImage();
