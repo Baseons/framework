@@ -203,7 +203,7 @@ class Upload
     /**
      * @return string|array|false
      */
-    public function saveImage(string $path, string|array|null $name = null, int|array|null $resize = null, bool $resize_adaptive = true, int|null $quality = 90, string $format = 'jpeg')
+    public function saveImage(string $path, string|array|null $name = null, int|array|null $resize = null, bool $resize_adaptive = true, int|null $quality = 100, string|null $format = null)
     {
         if (!extension_loaded('imagick')) throw new Exception('imagick extension not loaded');
 
@@ -218,14 +218,14 @@ class Upload
 
         foreach ($files as $key => $file) {
             $file_name = array_key_exists($key, $name) ? pathinfo($name[$key], PATHINFO_FILENAME) : pathinfo($file['name'], PATHINFO_FILENAME);
-            $file_name .= '.' . $format;
+            $file_name .= '.' . (array_key_exists($key, $name) ? pathinfo($name[$key], PATHINFO_EXTENSION) : pathinfo($file['name'], PATHINFO_EXTENSION));
             $save_path = $path . DIRECTORY_SEPARATOR . $file_name;
 
             move_uploaded_file($file['tmp_name'], $save_path);
 
             $imagick = new \Imagick;
             $imagick->readImage($save_path);
-            $imagick->setImageFormat($format);
+            if ($format) $imagick->setImageFormat($format);
 
             if ($quality !== null) $imagick->setImageCompressionQuality($quality);
 
@@ -248,7 +248,7 @@ class Upload
                 $imagick->adaptiveResizeImage($width, $height, $resize_adaptive);
             }
 
-            $imagick->writeImages($save_path,true);
+            $imagick->writeImages($save_path, true);
             $imagick->clear();
             $imagick->destroy();
 
