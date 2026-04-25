@@ -2,6 +2,7 @@
 
 namespace Baseons\Http;
 
+use Baseons\Collections\Hash;
 use Exception;
 use Baseons\Collections\Mime;
 
@@ -19,6 +20,8 @@ class Upload
      */
     public function errors()
     {
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
+
         if (is_array($this->input['error'])) {
             $errors = [];
 
@@ -35,7 +38,7 @@ class Upload
      */
     public function isValid()
     {
-        if (!array_key_exists('name', $this->input)) return false;
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return false;
 
         if (is_string($this->input['name'])) {
             if (!is_uploaded_file($this->input['tmp_name']) or !empty($this->input['error'])) return false;
@@ -58,13 +61,16 @@ class Upload
         return true;
     }
 
+    /**
+     * @return bool
+     */
     public function isImage()
     {
-        if (empty($this->input['tmp_name'])) return false;
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
 
-        if (is_string($this->input['tmp_name'])) return Mime::isImage($this->input['tmp_name']);
+        if (is_string($this->input['tmp_name'])) return mime()->isImage($this->input['tmp_name']);
 
-        foreach ($this->input['tmp_name'] as $path) if (!Mime::isImage($path)) return false;
+        foreach ($this->input['tmp_name'] as $path) if (!mime()->isImage($path)) return false;
 
         return true;
     }
@@ -74,7 +80,7 @@ class Upload
      */
     public function size(bool $format = false)
     {
-        if (empty($this->input['name'])) return $format ? str()->formatSize(0) : 0;
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return $format ? str()->formatSize(0) : 0;
 
         $size = is_array($this->input['size']) ? array_sum($this->input['size']) : $this->input['size'];
 
@@ -86,7 +92,7 @@ class Upload
      */
     public function extension()
     {
-        if (empty($this->input['name'])) return null;
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
 
         if (is_array($this->input['name'])) {
             $extensions = [];
@@ -107,20 +113,20 @@ class Upload
      */
     public function originalExtension()
     {
-        if (empty($this->input['tmp_name'])) return null;
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
 
         if (is_array($this->input['tmp_name'])) {
             $extensions = [];
 
             foreach ($this->input['tmp_name'] as $file) {
-                $extension = Mime::originalExtension($file) ?? pathinfo($file, PATHINFO_EXTENSION);
+                $extension = mime()->originalExtension($file) ?? pathinfo($file, PATHINFO_EXTENSION);
                 $extensions[] = $extension;
             }
 
             return $extensions;
         }
 
-        return Mime::originalExtension($this->input['tmp_name']) ?? pathinfo($this->input['tmp_name'], PATHINFO_EXTENSION);
+        return mime()->originalExtension($this->input['tmp_name']) ?? pathinfo($this->input['tmp_name'], PATHINFO_EXTENSION);
     }
 
     /**
@@ -128,7 +134,7 @@ class Upload
      */
     public function originalName()
     {
-        if (empty($this->input['name'])) return null;
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
 
         return $this->input['name'];
     }
@@ -138,7 +144,7 @@ class Upload
      */
     public function baseName()
     {
-        if (empty($this->input['name'])) return null;
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
 
         if (is_array($this->input['name'])) {
             $names = [];
@@ -160,56 +166,68 @@ class Upload
      */
     public function path()
     {
-        if (empty($this->input['tmp_name'])) return null;
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
 
         return $this->input['tmp_name'];
     }
 
     /**
-     * @return int
+     * @return string|array|null
      */
     public function save(string $path, string|array|null $name = null)
     {
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
+
         storage()->makeDirectory($path);
 
-        $count = 0;
-
         if (is_string($this->input['tmp_name'])) {
-            $x = $this->input['name'];
+            if (is_string($name)) $file_name = $name;
+            elseif (is_array($name) and array_key_exists(0, $name)) $file_name = $name[0];
+            else {
+                $extension = mime()->originalExtension($this->input['tmp_name']);
+                $extension = $extension ? '.' . $extension : '';
 
-            if (is_string($name)) $x = $name;
-            elseif (is_array($name) and array_key_exists(0, $name)) $x = $name[0];
+                $file_name = Hash::createTokenString(special: null, numbers: null, characters: 'abcdefghijklmnopqrstuvwxyz') . $extension;
+            }
 
-            $result = move_uploaded_file($this->input['tmp_name'], $path . DIRECTORY_SEPARATOR . $x);
+            $result = move_uploaded_file($this->input['tmp_name'], $path . DIRECTORY_SEPARATOR . $file_name);
 
-            if ($result) $count++;
+            if ($result) return $file_name;
+
+            return null;
         } elseif (is_array($this->input['tmp_name'])) {
-            if (is_string($name)) $name = [$name];
+            $return = [];
 
             foreach ($this->input['tmp_name'] as $key => $value) {
-                $x = $this->input['name'][$key];
+                if (is_array($name) and array_key_exists($key, $name)) $file_name = $name[$key];
+                else {
+                    $extension = mime()->originalExtension($this->input['tmp_name'][$key]);
+                    $extension = $extension ? '.' . $extension : '';
 
-                if (is_array($name) and array_key_exists($key, $name)) $x = $name[$key];
+                    $file_name = Hash::createTokenString(special: null, numbers: null, characters: 'abcdefghijklmnopqrstuvwxyz') . $extension;
+                }
 
-                $result = move_uploaded_file($value, $path . DIRECTORY_SEPARATOR . $x);
+                $result = move_uploaded_file($value, $path . DIRECTORY_SEPARATOR . $file_name);
 
-                if ($result) $count++;
+                if ($result) $return[$key] = $file_name;
             }
-        }
 
-        return $count;
+            return count($return) ? $return : null;
+        }
     }
 
     /**
-     * @return string|array|false
+     * @return string|array|null
      */
     public function saveImage(string $path, string|array|null $name = null, int|array|null $resize = null, bool $resize_adaptive = true, int|null $quality = 100, string|null $format = null)
     {
+        if (!is_array($this->input) or empty($this->input['tmp_name'])) return null;
+
         if (!extension_loaded('imagick')) throw new Exception('imagick extension not loaded');
 
-        $result = [];
+        $return = [];
         $multiple = $this->isMultiple();
-        $files = !$multiple ? [$this->input] : $this->toArray();
+        $files = $this->toArray();
 
         if ($name === null) $name = [];
         if (is_string($name)) $name = [$name];
@@ -217,59 +235,63 @@ class Upload
         storage()->makeDirectory($path);
 
         foreach ($files as $key => $file) {
-            if ($format) $extension = $format;
-            else $extension = array_key_exists($key, $name) ? pathinfo($name[$key], PATHINFO_EXTENSION) : pathinfo($file['name'], PATHINFO_EXTENSION);
-
-            $file_name = array_key_exists($key, $name) ? pathinfo($name[$key], PATHINFO_FILENAME) : pathinfo($file['name'], PATHINFO_FILENAME);
-            $file_name .= '.' . $extension;
-            $save_path = $path . DIRECTORY_SEPARATOR . $file_name;
-
-            move_uploaded_file($file['tmp_name'], $save_path);
-
-            $imagick = new \Imagick;
-            $imagick->readImage($save_path);
-            
-            if ($format) $imagick->setImageFormat($format);
-            if ($quality !== null) $imagick->setImageCompressionQuality($quality);
-
-            $imagick->stripImage();
-
-            if ($resize !== null) {
-                $width = $resize;
-                $height = $resize;
-
-                if (is_array($resize)) {
-                    if (array_key_exists(1, $resize)) {
-                        $width = $resize[0];
-                        $height = $resize[1];
-                    } else {
-                        $width = $resize[0];
-                        $height = $resize[0];
-                    }
-                }
-
-                $imagick->adaptiveResizeImage($width, $height, $resize_adaptive);
+            if ($name) {
+                if (is_string($name)) $file_name = $name;
+                elseif (is_array($name) and array_key_exists($key, $name)) $file_name = $name[$key];
+                else $file_name = $file['name'];
+            } else {
+                $extension = $format ? $format : mime()->originalExtension($file['tmp_name']);
+                $file_name = Hash::createTokenString(special: null, numbers: null, characters: 'abcdefghijklmnopqrstuvwxyz') . '.' . $extension;
             }
 
-            $imagick->writeImages($save_path, true);
-            $imagick->clear();
-            $imagick->destroy();
+            $save_path = $path . DIRECTORY_SEPARATOR . $file_name;
 
-            if (!$multiple) return $file_name;
+            if (move_uploaded_file($file['tmp_name'], $save_path)) {
+                $imagick = new \Imagick;
+                $imagick->readImage($save_path);
 
-            $result[] = $file_name;
+                if ($format) $imagick->setImageFormat($format);
+                if ($quality) $imagick->setImageCompressionQuality($quality);
+
+                $imagick->stripImage();
+
+                if ($resize !== null) {
+                    $width = $resize;
+                    $height = $resize;
+
+                    if (is_array($resize)) {
+                        if (array_key_exists(1, $resize)) {
+                            $width = $resize[0];
+                            $height = $resize[1];
+                        } else {
+                            $width = $resize[0];
+                            $height = $resize[0];
+                        }
+                    }
+
+                    $imagick->adaptiveResizeImage($width, $height, $resize_adaptive);
+                }
+
+                $imagick->writeImages($save_path, true);
+                $imagick->clear();
+                $imagick->destroy();
+
+                if (!$multiple) return $file_name;
+
+                $return[$key] = $file_name;
+            }
         }
 
-        return count($result) ? $result : false;
+        return count($return) ? $return : null;
     }
 
     /**
      * @return array
      */
-    public function toArray()
+    private function toArray()
     {
         if (empty($this->input['name'])) return [];
-        if (is_string($this->input['name'])) return $this->input;
+        if (is_string($this->input['name'])) return [$this->input];
 
         $data = [];
 

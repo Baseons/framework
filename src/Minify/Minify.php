@@ -17,7 +17,7 @@ class Minify
         return (new JS)->add($js)->execute();
     }
 
-    public function img(string $value, int $quality = 90, int|array|null $resize = null)
+    public function img(string $value, int $quality = 90, int|array|null $resize = null, string|null $format = 'webp')
     {
         $type = storage()->isFilePathOrContent($value);
 
@@ -27,10 +27,12 @@ class Minify
 
         try {
             $imagick = new \Imagick;
+
             $imagick->readImageBlob($value);
             $imagick->setImageCompressionQuality($quality);
             $imagick->stripImage();
-            $imagick->setImageFormat('webp');
+
+            if ($format) $imagick->setImageFormat($format);
 
             if ($resize !== null) {
                 $width = $resize;
