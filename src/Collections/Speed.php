@@ -11,20 +11,20 @@ class Speed
 {
     public function __construct()
     {
-        if (!extension_loaded('apcu')) throw new Exception('apcu extension not loaded');
+        // if (!extension_loaded('apcu')) throw new Exception('apcu extension not loaded');
 
-        if (!ini_get('apc.enable_cli')) {
-            $ini_files = php_ini_scanned_files() ?: '';
-            $files_array = explode(',', $ini_files);
-            $acpu_file = preg_grep('/apcu/i', $files_array);
-            $acpu_file = !empty($acpu_file) ? trim(reset($acpu_file)) : null;
+        // if (!ini_get('apc.enable_cli')) {
+        //     $ini_files = php_ini_scanned_files() ?: '';
+        //     $files_array = explode(',', $ini_files);
+        //     $acpu_file = preg_grep('/apcu/i', $files_array);
+        //     $acpu_file = !empty($acpu_file) ? trim(reset($acpu_file)) : null;
 
-            $error = 'apcu not enabled in CLI';
+        //     $error = 'apcu not enabled in CLI';
 
-            if ($acpu_file) $error .= ', add "apc.enable_cli = 1" in file ' . $acpu_file;
+        //     if ($acpu_file) $error .= ', add "apc.enable_cli = 1" in file ' . $acpu_file;
 
-            throw new Exception($error);
-        }
+        //     throw new Exception($error);
+        // }
 
         return $this;
     }

@@ -273,9 +273,9 @@ class WebSocketServer
             $this->server->on('WorkerExit', function ($server, $workerId) {
                 if ($this->timer) $this->timer->clearAll();
 
-                if (extension_loaded('apcu') and ini_get('apc.enable_cli')) {
-                    apcu_clear_cache();
-                }
+                // if (extension_loaded('apcu') and ini_get('apc.enable_cli')) {
+                //     apcu_clear_cache();
+                // }
             });
 
             // mesmo que handshake
