@@ -1,0 +1,43 @@
+<?php
+
+
+namespace App\Controllers\Web{{ $namespace ? "\\$namespace" : '' }};
+
+class {{$name}}
+
+{
+    public function index()
+    {
+        return response()->view('{{strtolower($name)}}.index', []);
+    }
+
+    public function create()
+    {
+        return response()->view('{{strtolower($name)}}.create', []);
+    }
+
+    public function edit()
+    {
+        return response()->view('{{strtolower($name)}}.edit', []);
+    }
+
+    public function formCreate()
+    {
+        // ...
+    }
+
+    public function formEdit()
+    {
+        // ...
+    }
+
+    public function formDelete()
+    {
+        // ...
+    }
+
+    public function search()
+    {
+        // ...
+    }
+}

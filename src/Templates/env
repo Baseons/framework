@@ -1,0 +1,40 @@
+APP_KEY = {{ $app_key }}
+
+APP_NAME = Baseons Framework
+APP_URL = http://localhost:3000
+
+APP_DEBUG = true
+APP_TIMEZONE = America/Los_Angeles
+APP_LOCALE = en_US
+
+DB_DEFAULT = mysql
+DB_HOST = localhost
+DB_PORT = 3306
+DB_DATABASE = baseons
+DB_USERNAME = root
+DB_PASSWORD =
+
+SESSION_NAME = session
+SESSION_SECURE = false
+SESSION_LIFETIME = 86400
+SESSION_DOMAIN = null
+
+MAIL_HOST =
+MAIL_PORT = 465
+MAIL_AUTH = login
+MAIL_ENCRYPTION = tls
+MAIL_USERNAME =
+MAIL_PASSWORD =
+MAIL_FROM_NAME = ${APP_NAME}
+MAIL_FROM_ADDRESS = ${MAIL_USERNAME}
+
+SERVER_HOST = localhost
+SERVER_ALIAS = localhost
+SERVER_SSL = false
+SERVER_KEY =
+SERVER_CRT =
+
+SSH_HOST = localhost
+SSH_PORT = 22
+SSH_USER = root
+SSH_PASSWORD =

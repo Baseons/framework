@@ -1,0 +1,12 @@
+<?php
+
+
+namespace App\Controllers\Console{{ $namespace ? "\\$namespace" : '' }};
+
+use Baseons\Shell\Shell;
+
+class {{$name}}
+
+{
+    // ...
+}

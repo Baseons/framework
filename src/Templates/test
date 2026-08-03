@@ -1,0 +1,12 @@
+<?php
+
+
+use Baseons\Test\Test;
+
+class {{ $name }} extends Test
+{
+    public function test()
+    {
+        $this->assert(1, 1);
+    }
+}
