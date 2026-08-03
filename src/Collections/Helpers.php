@@ -313,11 +313,11 @@ if (!function_exists('http')) {
 }
 
 if (!function_exists('lang')) {
-    function lang(string|null $key = null)
+    function lang(string|null $key = null, mixed $default = null)
     {
         if ($key === null) return new Lang;
 
-        return (new Lang())->get($key);
+        return (new Lang())->get($key, $default);
     }
 }
 
