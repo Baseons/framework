@@ -4,7 +4,6 @@ namespace Baseons\Collections;
 
 use DateTime;
 use Exception;
-use InvalidArgumentException;
 
 class Str
 {
