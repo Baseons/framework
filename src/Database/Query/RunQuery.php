@@ -4,91 +4,45 @@ namespace Baseons\Database\Query;
 
 use Baseons\Database\Connection;
 use PDO;
+use PDOStatement;
 
 class RunQuery
-{
+{    
+    private function executeStatement(string $query, array $bindparams, ?string $connection): PDOStatement
+    {
+        $stmt = Connection::instance($connection)->prepare($query);        
+        $stmt->execute($bindparams);
+
+        return $stmt;
+    }
+
     public function select(string $query, array $bindparams, string|null $connection, bool $all = true, $count = false, int|string|null $mode = null)
     {
-        $instance = Connection::instance($connection);
-        $query = $instance->prepare($query);
-        $mode = $mode !== null ? $mode : PDO::FETCH_DEFAULT;
+        $stmt = $this->executeStatement($query, $bindparams, $connection);
 
-        if (count($bindparams) > 0) {
-            $count_bindparams = 1;
+        if ($count) return $stmt->rowCount();
 
-            foreach ($bindparams as $value) {
-                $query->bindValue($count_bindparams, $value);
-                $count_bindparams++;
-            }
-        }
+        $mode = $mode ?? PDO::FETCH_DEFAULT;
 
-        $query->execute();
-
-        if ($count == true) return $query->rowCount();
-
-        if ($all == true) {
-            return $query->fetchAll($mode);
-        } else {
-            return $query->fetch($mode);
-        }
+        return $all ? $stmt->fetchAll($mode) : $stmt->fetch($mode);
     }
 
     public function insert(string $query, array $bindparams, string|null $connection, $get_id = false)
     {
-        $instance = Connection::instance($connection);
-        $query = $instance->prepare($query);
+        $stmt = $this->executeStatement($query, $bindparams, $connection);
+       
+        if ($get_id) return Connection::instance($connection)->lastInsertId();
 
-        if (count($bindparams) > 0) {
-            $count_bindparams = 1;
-
-            foreach ($bindparams as $value) {
-                $query->bindValue($count_bindparams, $value);
-                $count_bindparams++;
-            }
-        }
-
-        $query->execute();
-
-        if ($get_id) return $instance->lastInsertId();
-
-        return $query->rowCount();
+        return $stmt->rowCount();
     }
 
     public function update(string $query, array $bindparams, string|null $connection)
     {
-        $instance = Connection::instance($connection);
-        $query = $instance->prepare($query);
-
-        if (count($bindparams) > 0) {
-            $count_bindparams = 1;
-
-            foreach ($bindparams as $value) {
-                $query->bindValue($count_bindparams, $value);
-                $count_bindparams++;
-            }
-        }
-
-        $query->execute();
-
-        return $query->rowCount();
+        return $this->executeStatement($query, $bindparams, $connection)->rowCount();
     }
 
     public function delete(string $query, array $bindparams, string|null $connection)
     {
-        $instance = Connection::instance($connection);
-        $query = $instance->prepare($query);
-
-        if (count($bindparams) > 0) {
-            $count_bindparams = 1;
-
-            foreach ($bindparams as $value) {
-                $query->bindValue($count_bindparams, $value);
-                $count_bindparams++;
-            }
-        }
-
-        $query->execute();
-
-        return $query->rowCount();
+        return $this->executeStatement($query, $bindparams, $connection)->rowCount();
     }
 }
