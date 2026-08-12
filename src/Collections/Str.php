@@ -105,29 +105,6 @@ class Str
     }
 
     /**
-     * @param string $background RRGGBB[AA] hexadecimal format
-     * @param string $foreground RRGGBB[AA] hexadecimal format
-     * @param string $format png or svg format
-     * @return string
-     */
-    public static function qr(string $value, int $size = 450, string $background = 'FFFFFF', string $foreground = '000000', string $format = 'svg')
-    {
-        $format = strtolower($format);
-
-        if (!in_array($format, ['svg', 'png'])) throw new InvalidArgumentException('Invalid format, only svg or png available.');
-
-        return file_get_contents('https://image-charts.com/chart?' . http_build_query([
-            'cht' => 'qr',
-            'chs' => ceil($size / 2) . 'x' . ceil($size / 2),
-            'chld' => 'H|1',
-            'chl' => $value,
-            'chof' => '.' . $format,
-            'icqrb' => $background,
-            'icqrf' => $foreground
-        ]));
-    }
-
-    /**
      * Calculate the age based on the given birthdate, including years, months, days, hours, minutes, and seconds.
      *
      * @param string|null $date Birthdate
