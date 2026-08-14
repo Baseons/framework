@@ -57,7 +57,7 @@ class Request
 
     public function method(string|null $is = null)
     {
-        $accepteds = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'COPY', 'OPTIONS', 'LOCK', 'UNLOCK', 'INITIALIZE'];
+        $accepteds = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'COPY', 'OPTIONS', 'LOCK', 'UNLOCK'];
         $is = $is !== null ? strtoupper($is) : null;
 
         $method = !empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
