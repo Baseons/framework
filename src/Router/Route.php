@@ -93,6 +93,15 @@ class Route
     /**
      * @return \Baseons\Router\RouteOptions
      */
+    public static function initialize(string $route, string|array|callable $action)
+    {
+        self::add($route, $action, ['INITIALIZE'], 'initialize');
+        return new RouteOptions;
+    }
+
+    /**
+     * @return \Baseons\Router\RouteOptions
+     */
     public static function options(string $route, string|array|callable $action)
     {
         self::add($route, $action, ['OPTIONS'], 'options');

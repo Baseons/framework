@@ -57,7 +57,7 @@ class Request
 
     public function method(string|null $is = null)
     {
-        $accepteds = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'COPY', 'OPTIONS', 'LOCK', 'UNLOCK'];
+        $accepteds = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'COPY', 'OPTIONS', 'LOCK', 'UNLOCK', 'INITIALIZE'];
         $is = $is !== null ? strtoupper($is) : null;
 
         $method = !empty($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
@@ -93,7 +93,7 @@ class Request
 
     public function path()
     {
-       return parse_url($_SERVER['REQUEST_URI'] ?? $this->url(), PHP_URL_PATH);
+        return parse_url($_SERVER['REQUEST_URI'] ?? $this->url(), PHP_URL_PATH);
     }
 
     public function userAgent()
