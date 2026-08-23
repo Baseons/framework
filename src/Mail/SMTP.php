@@ -213,6 +213,16 @@ class SMTP
         return true;
     }
 
+    public function host()
+    {
+        return $this->host();
+    }
+
+    public function port()
+    {
+        return $this->port;
+    }
+
     private function close()
     {
         if (is_resource($this->connection)) {

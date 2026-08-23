@@ -2,6 +2,7 @@
 
 namespace Baseons\Mail;
 
+use Baseons\Collections\Hash;
 use Exception;
 use InvalidArgumentException;
 
@@ -9,7 +10,9 @@ class Builder
 {
     private array $recipients = [];
     private array $attachments = [];
+    private array $embedded = [];
     private string $body = '';
+    private \Baseons\Mail\SMTP|null $smtp = null;
 
     private array $headers = [
         'MIME-Version' =>  '1.0',
@@ -103,7 +106,6 @@ class Builder
     public function notificationTo(string $email, string|null $name = null)
     {
         if ($name === null) $this->header('Disposition-Notification-To', sprintf('<%s>', $email));
-
         else $this->header('Disposition-Notification-To', sprintf('"%s" <%s>', $name, $email));
 
         return $this;
@@ -112,7 +114,6 @@ class Builder
     public function replyTo(string $email, string|null $name = null)
     {
         if ($name === null) $this->header('Reply-To', sprintf('<%s>', $email));
-
         else $this->header('Reply-To', sprintf('"%s" <%s>', $name, $email));
 
         return $this;
@@ -132,14 +133,64 @@ class Builder
         return $this;
     }
 
-    public function attachment(string $path, string|null $name = null)
+    public function attachment(string $value, string|null $name = null)
     {
+        $type = storage()->isFilePathOrContent($value);
+
+        if (!$type) throw new Exception('File not found' . ($type == 'path' ? ': ' . $value : ''));
+
+        if ($type == 'path') {
+            $content = file_get_contents($value);
+
+            if ($name === null) $name = basename($value);
+        } else {
+            $content = $value;
+
+            if ($name === null) $name = Hash::createTokenString(40, null, 'abcdefghijklmnopqrstuvwxyz', null) . '.' . mime()->originalExtension($content);
+        }
+
         $this->attachments[] = [
-            'path' => $path,
-            'name' => $name
+            'name' => $name,
+            'content' => $content
         ];
 
         return $this;
+    }
+
+    public function embed(string $value, string|null $name = null): string
+    {
+        $type = storage()->isFilePathOrContent($value);
+
+        if (!$type) throw new Exception('File not found' . ($type == 'path' ? ': ' . $value : ''));
+
+        if ($type == 'path') {
+            $content = file_get_contents($value);
+            if ($name === null) $name = basename($value);
+        } else {
+            $content = $value;
+            $extension = mime()->originalExtension($content);
+
+            if ($name === null) $name = Hash::createTokenString(40, null, 'abcdefghijklmnopqrstuvwxyz', null) . '.' . $extension;
+        }
+
+        $contentHash = md5($content);
+
+        foreach ($this->embedded as $file) if ($file['hash'] === $contentHash) return 'cid:' . $file['cid'];
+
+        $domain = parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'baseons.mail';
+        $cid = md5(uniqid('', true)) . '@' . $domain;
+
+        $mimeType = mime()->originalMime($content) ?? 'application/octet-stream';
+
+        $this->embedded[] = [
+            'name' => $name,
+            'content' => $content,
+            'cid' => $cid,
+            'mime' => $mimeType,
+            'hash' => $contentHash
+        ];
+
+        return 'cid:' . $cid;
     }
 
     public function build()
@@ -147,7 +198,6 @@ class Builder
         if (!count($this->recipients)) throw new InvalidArgumentException('No recipients added: to, bcc or cc');
 
         $content = '';
-        $boundary = md5(uniqid());
         $recipients = [];
 
         $to = [];
@@ -171,37 +221,76 @@ class Builder
         if (count($bcc)) $this->header('Bcc', implode(',', $bcc));
         if (count($cc)) $this->header('Cc', implode(',', $cc));
 
-        if (array_key_exists('Date', $this->headers)) $this->header('Date', date('r'));
+        if (!array_key_exists('Date', $this->headers)) $this->header('Date', date('r'));
 
-        $this->header('Content-Type', !count($this->attachments) ? sprintf('%s; boundary="%s"', 'multipart/alternative', $boundary) : sprintf('%s; boundary="%s"', 'multipart/mixed', $boundary));
+        $hasAttachments = count($this->attachments) > 0;
+        $hasEmbedded = count($this->embedded) > 0;
+
+        $boundaryMixed = '=_mix_' . md5(uniqid('mix', true));
+        $boundaryRelated = '=_rel_' . md5(uniqid('rel', true));
+
+        if ($hasAttachments) {
+            $this->header('Content-Type', sprintf('multipart/mixed; boundary="%s"', $boundaryMixed));
+        } elseif ($hasEmbedded) {
+            $this->header('Content-Type', sprintf('multipart/related; boundary="%s"', $boundaryRelated));
+        } else {
+            $this->header('Content-Type', sprintf('multipart/alternative; boundary="%s"', $boundaryMixed));
+        }
 
         foreach ($this->headers as $key => $value) $content .= $this->line($key . ': ' . $value);
 
-        // attachments
-        foreach ($this->attachments as $attachment) {
-            if (!file_exists($attachment['path'])) throw new Exception('File not found: ' . $attachment['path']);
-
-            $name = empty($attachment['name']) ? basename($attachment['path']) : $attachment['name'];
-
+        if ($hasAttachments) {
             $content .= $this->line('');
-            $content .= $this->line('--' . $boundary);
-            $content .= "Content-Type: application/octet-stream; name=\"$name\"\r\n";
-            $content .= "Content-Disposition: attachment; filename=\"$name\"\r\n";
-            $content .= "Content-Transfer-Encoding: base64\r\n";
-            $content .= $this->line('');
-            $content .= $this->line(base64_encode(file_get_contents($attachment['path'])));
+            $content .= $this->line('--' . $boundaryMixed);
+
+            if ($hasEmbedded) {
+                $content .= $this->line(sprintf('Content-Type: multipart/related; boundary="%s"', $boundaryRelated));
+                $content .= $this->line('');
+            }
         }
+
+        $activeBoundary = $hasEmbedded ? $boundaryRelated : $boundaryMixed;
 
         // body
         if (!empty($this->body)) {
             $content .= $this->line('');
-            $content .= $this->line('--' . $boundary);
+            $content .= $this->line('--' . $activeBoundary);
             $content .= $this->body;
         }
 
-        if (!empty($content)) {
+        // embedded
+        if ($hasEmbedded) {
+            foreach ($this->embedded as $embed) {
+                $content .= $this->line('');
+                $content .= $this->line('--' . $boundaryRelated);
+                $content .= "Content-Type: {$embed['mime']}; name=\"{$embed['name']}\"\r\n";
+                $content .= "Content-ID: <{$embed['cid']}>\r\n";
+                $content .= "Content-Disposition: inline; filename=\"{$embed['name']}\"\r\n";
+                $content .= "Content-Transfer-Encoding: base64\r\n";
+                $content .= $this->line('');
+                $content .= $this->line(chunk_split(base64_encode($embed['content'])));
+            }
+
             $content .= $this->line('');
-            $content .= $this->line('--' . $boundary . '--');
+            $content .= $this->line('--' . $boundaryRelated . '--');
+        }
+
+        // attachments
+        if ($hasAttachments) {
+            foreach ($this->attachments as $attachment) {
+                $content .= $this->line('');
+                $content .= $this->line('--' . $boundaryMixed);
+                $content .= "Content-Type: application/octet-stream; name=\"{$attachment['name']}\"\r\n";
+                $content .= "Content-Disposition: attachment; filename=\"{$attachment['name']}\"\r\n";
+                $content .= "Content-Transfer-Encoding: base64\r\n";
+                $content .= $this->line('');
+                $content .= $this->line(chunk_split(base64_encode($attachment['content'])));
+            }
+            $content .= $this->line('');
+            $content .= $this->line('--' . $boundaryMixed . '--');
+        } elseif (!$hasEmbedded && !empty($content)) {
+            $content .= $this->line('');
+            $content .= $this->line('--' . $boundaryMixed . '--');
         }
 
         return [
@@ -212,13 +301,13 @@ class Builder
 
     public function send(string|null $connection = null)
     {
-        $smtp = Mail::smtp($connection);
+        $this->smtp = Mail::smtp($connection);
 
-        if (!array_key_exists('From', $this->headers))  $this->from($smtp->config['from_address'], $smtp->config['from_name']);
+        if (!array_key_exists('From', $this->headers)) $this->from($this->smtp->config['from_address'], $this->smtp->config['from_name']);
 
         $build = $this->build();
 
-        return $smtp->sendBuild($build['recipients'], $build['content']);
+        return $this->smtp->sendBuild($build['recipients'], $build['content']);
     }
 
     private function line(string $value)
