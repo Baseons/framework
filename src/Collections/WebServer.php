@@ -30,17 +30,8 @@ function web_server_message($message)
     fclose($stdout);
 }
 
-// end request
-$message = [
-    'date' => date('d/m/Y H:i:s'),
-    'file' => null,
-    'request' => null
-];
-
 $replace = implode(DIRECTORY_SEPARATOR, ['vendor', 'baseons', 'framework', 'src', 'Collections']);
 $root = str_replace($replace, '', __DIR__);
-
-// $root = str_replace('core/Collections', '', __DIR__);
 
 if ($path !== '/' and is_file($root . 'public' . $path)) {
     $file = $root . 'public' . $path;
@@ -1263,9 +1254,12 @@ if ($path !== '/' and is_file($root . 'public' . $path)) {
 
         header('Content-Length: ' . filesize($file));
 
-        $message['file'] = [
-            'url' => web_server_url(),
-            'size' => filesize($file)
+        $message =  [
+            'date' => date('d/m/Y H:i:s'),
+
+            'file' =>  [
+                'url' => web_server_url()             
+            ]
         ];
 
         web_server_message($message);
@@ -1273,10 +1267,13 @@ if ($path !== '/' and is_file($root . 'public' . $path)) {
         return readfile($file);
     }
 } else {
-    $message['request'] = [
-        'method' => web_server_method(),
-        'url' => web_server_url(),
-        'size' => $_SERVER['CONTENT_LENGTH']
+    $message = [
+        'date' => date('d/m/Y H:i:s'),
+
+        'request' => [
+            'method' => web_server_method(),
+            'url' => web_server_url()     
+        ]
     ];
 
     web_server_message($message);

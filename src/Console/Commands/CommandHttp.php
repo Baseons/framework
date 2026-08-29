@@ -42,19 +42,17 @@ class CommandHttp
         Shell::exec($command, function ($line) {
             if ($data = json_decode($line, true)) {
                 if (!empty($data['file'])) {
-                    $start = Shell::normal($data['date'], true, false);
-                    $start .= Shell::gray(strtoupper(str()->formatSize($data['file']['size'])), false, false);
-
-                    $end = Shell::magenta('FILE', true, false);
-                    $end .= Shell::blue($data['file']['url'], false, false);
+                    $start =Shell::blue($data['file']['url'], false, false);
+                
+                    $end = Shell::magenta('STATIC FILE', true, false);
+                    $end .= Shell::normal($data['date'], false, false); 
 
                     Shell::list($start, $end)->br();
                 } elseif (!empty($data['request'])) {
-                    $start = Shell::normal($data['date'], true, false);
-                    $start .= Shell::gray(strtoupper(str()->formatSize($data['request']['size'] ?? 0)), false, false);
-
+                    $start =Shell::blue($data['request']['url'], false, false); 
+                
                     $end = Shell::green($data['request']['method'], true, false);
-                    $end .= Shell::blue($data['request']['url'], false, false);
+                    $end .= Shell::normal($data['date'], false, false);
 
                     Shell::list($start, $end)->br();
                 }
